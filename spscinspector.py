@@ -96,6 +96,14 @@ class SourceInspectCamera(PanZoomCamera):
         if event.key == 'S':
             self._timer.stop()
 
+        if event.key == 'X':
+            ind = np.argsort(self.poslist[:,0])
+            self.poslist = self.poslist[ind]
+
+        if event.key == 'Y':
+            ind = np.argsort(self.poslist[:,1])
+            self.poslist = self.poslist[ind]
+
 # Get the data
 img_data = fits.getdata('/Users/shupe/data/spsc/level2/twop3_02/1342255106PSW_map.fits.zip', ext=1)
 
