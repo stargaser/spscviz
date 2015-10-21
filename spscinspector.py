@@ -59,6 +59,11 @@ class SourceInspectCamera(PanZoomCamera):
         curX = self.rect.left + self.rect.width/2.0
         curY = self.rect.bottom + self.rect.height/2.0
         self.pan((newX-curX,newY-curY))
+        # update image data
+        imsect = img_data[int(self.rect.bottom):int(self.rect.top),
+               int(self.rect.left):int(self.rect.right)]
+        image.set_data(bytescale(img_data,cmin=0.8*np.nanmin(imsect),
+                       cmax=1.02*np.nanmax(imsect)))
 
     def on_timer(self, event):
         """Timer event handler
