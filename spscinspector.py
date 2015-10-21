@@ -105,10 +105,15 @@ class SourceInspectCamera(PanZoomCamera):
             self.poslist = self.poslist[ind]
 
 # Get the data
-img_data = fits.getdata('/Users/shupe/data/spsc/level2/twop3_02/1342255106PSW_map.fits.zip', ext=1)
+hdu = fits.open('/Users/shupe/data/spsc/level2/twop3_02/1342255106PSW_map.fits.zip')
+img_data = hdu[1].data
+img_wcs = WCS(hdu[1].header)
+deg_per_pix = np.sqrt(np.abs(np.linalg.det(img_wcs.pixel_scale_matrix)))
+beam_size = 17.0/3600
+mrkr_size = beam_size/deg_per_pix
 
 # Get the source list
-sources = Table.read('/Users/shupe/Analysis/spire_psc/vispy/1342255106PSW_map_detect.fits', hdu=1)
+sources = Table.read('/Users/shupe/Analysis/spire_psc/spscviz/1342255106PSW_map_detect.fits', hdu=1)
 
 pos = np.vstack([sources['x'],sources['y']]).T + 0.5
 nsrc = pos.shape[0]
@@ -132,12 +137,14 @@ image = scene.visuals.Image(bytescale(img_data, cmin=0.8*np.nanmin(img_data),
 
 # Set 2D camera (the camera will scale to the contents in the scene)
 view.camera = SourceInspectCamera(pos,index=0,aspect=1)
+view.camera.set_range()
 
 # Add the markers
 colors = np.random.uniform(size=(pos.shape[0], 3), low=.5, high=.8)
 
 p1 = scene.visuals.Markers(parent=view.scene)
-p1.set_data(pos, face_color=colors)
+p1.set_data(pos, face_color=None, edge_color="white", scaling=True,
+             edge_width=1.5, size=mrkr_size)
 
 i=0
 
