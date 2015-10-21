@@ -130,9 +130,14 @@ canvas.show()
 view = canvas.central_widget.add_view()
 
 # Create the image
-image = scene.visuals.Image(bytescale(img_data, cmin=0.8*np.nanmin(img_data),
-     cmax=1.05*np.nanmax(img_data)), parent=view.scene)
-
+#image = scene.visuals.Image(bytescale(img_data, cmin=0.8*np.nanmin(img_data),
+#     cmax=1.05*np.nanmax(img_data)), parent=view.scene)
+# note that vispy.color.get_colormaps() returns all the ColorMaps
+image = scene.visuals.Image(bytescale(img_data, cmin=0.9*np.nanmin(img_data),
+                                      cmax=1.02*np.nanmax(img_data)),
+                            #clim=(0.8*np.nanmin(img_data), 1.05*np.nanmax(img_data)),
+                            cmap='grays',
+                            parent=view.scene)
 
 
 # Set 2D camera (the camera will scale to the contents in the scene)
