@@ -1,13 +1,15 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vispy: gallery 30
 # -----------------------------------------------------------------------------
-# Copyright (c) 2015, Vispy Development Team. All Rights Reserved.
+# Copyright (c) 2015, California Institute of Technology.
 # Distributed under the (new) BSD License. See LICENSE.txt for more info.
 # -----------------------------------------------------------------------------
 """
 Simple use of SceneCanvas to display an Image.
 """
 import sys
+import os
 from vispy import scene, app, visuals, gloo
 from vispy.visuals.transforms import STTransform, TransformSystem
 import numpy as np
@@ -27,11 +29,13 @@ class SourceInspectCamera(PanZoomCamera):
 
     _state_props = PanZoomCamera._state_props + ('index', )
 
-    def __init__(self, poslist, index=0, **kwargs):
+    def __init__(self, image, img_data, poslist, index=0, **kwargs):
         PanZoomCamera.__init__(self, **kwargs)
         self.index = index
+        self.image = image
+        self.img_data = img_data
         self.poslist = poslist
-        self.nsrc = poslist.shape[0]
+        self.nsrc = len(poslist)
         self._keymap = {
             keys.UP: +1,
             keys.DOWN: -1,
@@ -55,14 +59,15 @@ class SourceInspectCamera(PanZoomCamera):
             self.index = self.nsrc - 1
 
     def update_pan(self):
-        newX, newY = self.poslist[self.index]
+        newX = self.poslist[self.index][0]
+        newY = self.poslist[self.index][1]
         curX = self.rect.left + self.rect.width/2.0
         curY = self.rect.bottom + self.rect.height/2.0
         self.pan((newX-curX,newY-curY))
         # update image data
-        imsect = img_data[int(self.rect.bottom):int(self.rect.top),
+        imsect = self.img_data[int(self.rect.bottom):int(self.rect.top),
                int(self.rect.left):int(self.rect.right)]
-        image.set_data(bytescale(img_data,cmin=0.8*np.nanmin(imsect),
+        self.image.set_data(bytescale(img_data,cmin=0.8*np.nanmin(imsect),
                        cmax=1.02*np.nanmax(imsect)))
 
     def on_timer(self, event):
@@ -102,77 +107,114 @@ class SourceInspectCamera(PanZoomCamera):
             self._timer.stop()
 
         if event.key == 'X':
-            ind = np.argsort(self.poslist[:,0])
+            ind = np.argsort(self.poslist[0])
             self.poslist = self.poslist[ind]
 
         if event.key == 'Y':
-            ind = np.argsort(self.poslist[:,1])
+            ind = np.argsort(self.poslist[1])
             self.poslist = self.poslist[ind]
 
-# Get the data
-hdu = fits.open('/Users/shupe/data/spsc/level2/twop3_02/1342255106PSW_map.fits.zip')
-img_data = hdu[1].data
-img_wcs = WCS(hdu[1].header)
-deg_per_pix = np.sqrt(np.abs(np.linalg.det(img_wcs.pixel_scale_matrix)))
-beam_size = 17.0/3600
-mrkr_size = beam_size/deg_per_pix
+def find_map(obsid, arrayname, mapdir, template="{}{}_map.fits.zip"):
+    """ Walk the map directory and return the map data and marker size
 
-# Get the source list
-sources = Table.read('/Users/shupe/Analysis/spire_psc/spscviz/1342255106PSW_map_detect.fits', hdu=1)
+    Parameters:
+    -----------
+    obsid (int): observation id (10-digit integer)
+    arrayname (string) : PSW, PMW or PLW
+    mapdir (string) : top-level of map directory
+    template (string) : how to format obsid and arrayname into a map name
 
-pos = np.vstack([sources['x'],sources['y']]).T + 0.5
-nsrc = pos.shape[0]
-i = 0
+    Returns:
+    --------
+    img_data : numpy array of image data
+    mrkr_size : size of markers in pixels
+    """
+    fname = template.format(obsid, arrayname)
+    fullname = fname
+    for root, dir, files in os.walk(os.path.abspath(mapdir), followlinks=True):
+        for name in files:
+            if name.endswith(fname):
+                fullname = os.path.join(root, fname)
+                break
+    # Get the data
+    hdu = fits.open(fullname)
+    img_data = hdu[1].data
+    img_wcs = WCS(hdu[1].header)
+    deg_per_pix = np.sqrt(np.abs(np.linalg.det(img_wcs.pixel_scale_matrix)))
+    beams = {'PSW':17.0, 'PMW':32.0, 'PLW':42.0}
+    beam_size = beams[arrayname]/3600.
+    mrkr_size = beam_size/deg_per_pix
+    return(img_data, mrkr_size)
 
-keydict = dict(escape='close', p=lambda x: max(0,i-1),
-    n=lambda x: min(nsrc,i+1))
+def sourcelist_pscdb(obsid, arrayname):
+    """ Return dataframe from source table
 
-canvas = scene.SceneCanvas(keys=keydict)
-canvas.size = img_data.shape
-canvas.show()
+    Parameters:
+    -----------
+    obsid (int): observation id (10-digit integer)
+    arrayname (string) : PSW, PMW or PLW
 
-# Set up a viewbox to display the image with interactive pan/zoom
-view = canvas.central_widget.add_view()
+    Returns:
+    --------
+    sources : Pandas dataframe of the sources
+    """
+    import psycopg2 as pg
+    import pandas.io.sql as psql
+    with pg.connect("dbname=spire user=spire host=psc.ipac.caltech.edu") as connection:
+        sources = psql.read_sql("""
+            select sourceid, obsid, arrayname, x, y
+            from source
+            where obsid={} and arrayname='{}'""".format(obsid, arrayname),
+            connection)
+    return(sources)
 
-# Create the image
-#image = scene.visuals.Image(bytescale(img_data, cmin=0.8*np.nanmin(img_data),
-#     cmax=1.05*np.nanmax(img_data)), parent=view.scene)
-# note that vispy.color.get_colormaps() returns all the ColorMaps
-image = scene.visuals.Image(bytescale(img_data, cmin=0.9*np.nanmin(img_data),
+def display_sources(sources, img_data, mrkr_size):
+    nsrc = len(sources)
+
+    pos = np.vstack([sources['x'].data, sources['y'].data]).T
+    print(pos.shape)
+
+    keydict = dict(escape='close', p=lambda x: max(0,i-1),
+        n=lambda x: min(nsrc,i+1))
+
+    canvas = scene.SceneCanvas(keys=keydict)
+    canvas.size = img_data.shape
+    canvas.show()
+
+    # Set up a viewbox to display the image with interactive pan/zoom
+    view = canvas.central_widget.add_view()
+
+    # Create the image
+    #image = scene.visuals.Image(bytescale(img_data, cmin=0.8*np.nanmin(img_data),
+    #     cmax=1.05*np.nanmax(img_data)), parent=view.scene)
+    # note that vispy.color.get_colormaps() returns all the ColorMaps
+    image = scene.visuals.Image(bytescale(img_data, cmin=0.9*np.nanmin(img_data),
                                       cmax=1.02*np.nanmax(img_data)),
                             #clim=(0.8*np.nanmin(img_data), 1.05*np.nanmax(img_data)),
                             cmap='grays',
                             parent=view.scene)
-
-
-# Set 2D camera (the camera will scale to the contents in the scene)
-view.camera = SourceInspectCamera(pos,index=0,aspect=1)
-view.camera.set_range()
-
-# Add the markers
-colors = np.random.uniform(size=(pos.shape[0], 3), low=.5, high=.8)
-
-p1 = scene.visuals.Markers(parent=view.scene)
-p1.set_data(pos, face_color=None, edge_color="white", scaling=True,
+    # Set 2D camera (the camera will scale to the contents in the scene)
+    view.camera = SourceInspectCamera(image,img_data,pos,index=0,aspect=1)
+    view.camera.set_range()
+    # Add the markers
+    p1 = scene.visuals.Markers(parent=view.scene)
+    p1.set_data(pos,
+             face_color=None, edge_color="white", scaling=True,
              edge_width=1.5, size=mrkr_size)
-
-i=0
-
-#for i in range(pos.shape[0]):
-#    view.camera.rect = Rect(pos[i][0],pos[i][1], 20,20)
-#    sleep(0.1)
-#    canvas.update()
-
-
-#canvas.tr_sys.visual_to_document = STTransform()
-#markers = scene.visuals.Markers()
-#colors = np.ones((pos.shape[0], 4), dtype=np.float32)
-#markers.set_data(pos, face_color=colors)
-#scene.visuals.index=0
-#scene.visuals.scale = 1.
-#markers.set_symbol(visuals.marker_types[0])
-#markers.draw(TransformSystem(canvas))
+    app.run()
+    return
 
 
 if __name__ == '__main__' and sys.flags.interactive == 0:
-    app.run()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("obsid", help="observation id", type=int)
+    parser.add_argument("array", help="SPIRE array name, must be PSW, PMW or PMW")
+    parser.add_argument("mapdir", help="top-level map directory")
+    args = parser.parse_args()
+    obsid = args.obsid
+    arrayname = args.array
+    mapdir = args.mapdir
+    sources = sourcelist_pscdb(obsid, arrayname)
+    img_data, mrkr_size = find_map(obsid, arrayname, mapdir)
+    display_sources(sources, img_data, mrkr_size)
