@@ -7,7 +7,8 @@ Astropy, vispy, numpy and pandas are required. A development version of vispy (0
 `pip install https://github.com/vispy/vispy/archive/master.zip`.
 
 The module `spscinspector.py` can be run by itself with argument of observation id, arrayname (PSW, PMW or PLW), and 
-the top-level path of a directory containing maps of the form obsidarrayname_map.fits.zip. It will query the database for the 
+the top-level path of a directory containing maps of the form 
+`obsidarrayname_map.fits.zip`. It will query the database for the 
 specified obsid and arrayname; find the corresponding map; and bring up a display window of the image with sources overlaid.
 
 Clicking in the display window allows up-arrow, down-arrow, left-arrow and right-arrow to be used to quickly pan on the sources. 
