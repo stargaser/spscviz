@@ -136,6 +136,9 @@ def find_map(obsid, arrayname, mapdir, template="{}{}_map.fits.zip"):
             if name.endswith(fname):
                 fullname = os.path.join(root, fname)
                 break
+            elif name.endswith(fname.replace('map','pmd')):
+                fullname = os.path.join(root, fname.replace('map','pmd'))
+                break
     # Get the data
     hdu = fits.open(fullname)
     img_data = hdu[1].data
