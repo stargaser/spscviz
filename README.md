@@ -19,12 +19,14 @@ specified obsid and arrayname; find the corresponding map; and bring up a
 display window of the image with sources overlaid.
 
 Clicking in the display window allows up-arrow, down-arrow, left-arrow and right-arrow
-to be used to quickly center on individual sources. The mouse wheel or equivalent
-can be used for zooming. 
+to be used to quickly center on individual sources. Spacebar also 
+increments through the sources.
+The mouse wheel or equivalent can be used for zooming. 
 The image display is adjusted based on the pixel values in the currently-zoomed
 portion of the image.
-A movie mode can be started with "m" and stopped with "s". Spacebar also 
-increments through the sources.
+Pressing letter "L" will print the current sourceid and x,y pixel location.
+A movie mode can be started with "m" and stopped with "s". 
+F11 will make the window full-screen and ESC will close it.
 
 The database query assumes that the user has set up their credentials 
 in a ~/.pgpass file or equivalent.
