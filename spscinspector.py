@@ -29,11 +29,12 @@ class SourceInspectCamera(PanZoomCamera):
 
     _state_props = PanZoomCamera._state_props + ('index', )
 
-    def __init__(self, image, img_data, poslist, index=0, **kwargs):
+    def __init__(self, image, img_data, sources, poslist, index=0, **kwargs):
         PanZoomCamera.__init__(self, **kwargs)
         self.index = index
         self.image = image
         self.img_data = img_data
+        self.sources = sources
         self.poslist = poslist
         self.nsrc = len(poslist)
         self._keymap = {
@@ -67,8 +68,18 @@ class SourceInspectCamera(PanZoomCamera):
         # update image data
         imsect = self.img_data[int(self.rect.bottom):int(self.rect.top),
                int(self.rect.left):int(self.rect.right)]
-        self.image.set_data(bytescale(img_data,cmin=0.8*np.nanmin(imsect),
+        self.image.set_data(bytescale(self.img_data,cmin=0.8*np.nanmin(imsect),
                        cmax=1.02*np.nanmax(imsect)))
+        # add a label (take out 'cause this kills the performance)
+        #txt = scene.visuals.Text('sourceid {}'.format(self.sources['sourceid'][self.index]),
+        #     parent=self.viewbox, font_size=14, color='green',
+        #     anchor_x='left', anchor_y='top')
+        #txt.pos = 10, 10
+        #rect = scene.visuals.Rectangle(height=40, width=100, color='black',
+        #          parent=self.viewbox)
+        #rect.pos = 10,10
+        #rect.update()
+        #txt.update()
 
     def on_timer(self, event):
         """Timer event handler
@@ -94,25 +105,32 @@ class SourceInspectCamera(PanZoomCamera):
         if event.handled or not self.interactive:
             return
 
-        if event.key in self._keymap:
-            val = self._keymap[event.key]
-            self.update_index(val)
-            self.update_pan()
-            self.view_changed()
+        if event.type == 'key_press':
+            if event.key in self._keymap:
+                val = self._keymap[event.key]
+                self.update_index(val)
+                self.update_pan()
+                self.view_changed()
 
-        if event.key == 'M':
-            self._timer.start()
+            elif event.key == 'M':
+                self._timer.start()
 
-        if event.key == 'S':
-            self._timer.stop()
+            elif event.key == 'S':
+                self._timer.stop()
 
-        if event.key == 'X':
-            ind = np.argsort(self.poslist[:,0])
-            self.poslist = self.poslist[ind]
+            #elif event.key == 'X':
+            #    ind = np.argsort(self.poslist[:,0])
+            #    self.poslist = self.poslist[ind]
 
-        if event.key == 'Y':
-            ind = np.argsort(self.poslist[:,1])
-            self.poslist = self.poslist[ind]
+            #elif event.key == 'Y':
+            #    ind = np.argsort(self.poslist[:,1])
+            #    self.poslist = self.poslist[ind]
+
+            elif event.key == 'L':
+                print('sourceid {}, ({},{})'.format(
+                     self.sources['sourceid'][self.index],
+                     self.poslist[self.index][0],
+                     self.poslist[self.index][1]))
 
 def find_map(obsid, arrayname, mapdir, template="{}{}_map.fits.zip"):
     """ Walk the map directory and return the map data and marker size
@@ -167,7 +185,8 @@ def sourcelist_pscdb(obsid, arrayname):
         sources = psql.read_sql("""
             select sourceid, obsid, arrayname, x, y
             from source
-            where obsid={} and arrayname='{}'""".format(obsid, arrayname),
+            where obsid={} and arrayname='{}'
+            order by sourceid asc""".format(obsid, arrayname),
             connection)
     return(sources)
 
@@ -180,11 +199,12 @@ def display_sources(sources, img_data, mrkr_size):
     keydict = dict(escape='close', p=lambda x: max(0,i-1),
         n=lambda x: min(nsrc,i+1))
 
-    canvas = scene.SceneCanvas(keys=keydict)
+    #canvas = scene.SceneCanvas(keys=keydict)
+    canvas = scene.SceneCanvas(keys='interactive')
     canvas.size = img_data.shape
     canvas.show()
 
-    # Set up a viewbox to display the image with interactive pan/zoom
+    # Set viewbox to display the image with interactive pan/zoom
     view = canvas.central_widget.add_view()
 
     # Create the image
@@ -197,7 +217,7 @@ def display_sources(sources, img_data, mrkr_size):
                             cmap='grays',
                             parent=view.scene)
     # Set 2D camera (the camera will scale to the contents in the scene)
-    view.camera = SourceInspectCamera(image,img_data,pos,index=0,aspect=1)
+    view.camera = SourceInspectCamera(image,img_data,sources,pos,index=0,aspect=1)
     view.camera.set_range()
     # Add the markers
     p1 = scene.visuals.Markers(parent=view.scene)
