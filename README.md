@@ -4,8 +4,11 @@ This module has been developed for fast viewing of candidates from the SPIRE Poi
 Source Catalog. Its intended audience is the people working to make the catalog --
 in practical terms this applies only to access to the working database.
 
-Astropy, vispy, numpy and pandas are required. A development version of 
-vispy (0.5.0 track) is needed and can be installed with
+Astropy, vispy, numpy and pandas are required. All the dependencies
+except vispy are available in a scientific Python distribution
+such as [Anaconda](https://www.continuum.io/downloads). 
+A development version of 
+[vispy](http://vispy.org) (0.5.0 track) is needed and can be installed with
 `pip install https://github.com/vispy/vispy/archive/master.zip`.
 
 The module `spscinspector.py` can be run as a standalone script with arguments
