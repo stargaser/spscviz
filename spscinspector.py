@@ -149,7 +149,7 @@ def find_map(obsid, arrayname, mapdir, template="{}{}_map.fits.zip"):
     """
     fname = template.format(obsid, arrayname)
     fullname = fname
-    for root, dir, files in os.walk(os.path.abspath(mapdir), followlinks=True):
+    for root, dir, files in os.walk(os.path.expanduser(mapdir), followlinks=True):
         for name in files:
             if name.endswith(fname):
                 fullname = os.path.join(root, fname)
