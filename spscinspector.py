@@ -107,11 +107,11 @@ class SourceInspectCamera(PanZoomCamera):
             self._timer.stop()
 
         if event.key == 'X':
-            ind = np.argsort(self.poslist[0])
+            ind = np.argsort(self.poslist[:,0])
             self.poslist = self.poslist[ind]
 
         if event.key == 'Y':
-            ind = np.argsort(self.poslist[1])
+            ind = np.argsort(self.poslist[:,1])
             self.poslist = self.poslist[ind]
 
 def find_map(obsid, arrayname, mapdir, template="{}{}_map.fits.zip"):
