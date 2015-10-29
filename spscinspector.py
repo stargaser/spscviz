@@ -44,7 +44,7 @@ class SourceInspectCamera(PanZoomCamera):
             keys.RIGHT: +1,
             keys.SPACE: +1
         }
-        self._timer = Timer(0.1, start=False, connect=self.on_timer)
+        self._timer = Timer(0.2, start=False, connect=self.on_timer)
 
     @property
     def keymap(self):
@@ -194,7 +194,6 @@ def display_sources(sources, img_data, mrkr_size):
     nsrc = len(sources)
 
     pos = np.vstack([sources['x'].data, sources['y'].data]).T
-    print(pos.shape)
 
     keydict = dict(escape='close', p=lambda x: max(0,i-1),
         n=lambda x: min(nsrc,i+1))
@@ -238,6 +237,8 @@ if __name__ == '__main__' and sys.flags.interactive == 0:
     obsid = args.obsid
     arrayname = args.array
     mapdir = args.mapdir
+    print('loading sources from database for {} {}...'.format(obsid,arrayname), end='', flush=True)
     sources = sourcelist_pscdb(obsid, arrayname)
+    print('done.')
     img_data, mrkr_size = find_map(obsid, arrayname, mapdir)
     display_sources(sources, img_data, mrkr_size)
