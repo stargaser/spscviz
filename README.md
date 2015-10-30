@@ -33,16 +33,23 @@ The map directory assumes that you have a local copy of the Level 2 maps.
 
 ## Controlling the display 
 
-Clicking in the display window allows up-arrow, down-arrow, left-arrow and right-arrow
-to be used to quickly center on individual sources. Spacebar also 
-increments through the sources.
-The mouse wheel or equivalent can be used for zooming. 
-The image stretch is based at the lowe end on the pixel values in the currently-zoomed
-portion of the image, and at the upper end by the timeline-fitter flux
-Pressing letter "L" will print (in your terminal) all the information for the
-current source that was queried from the database.
-A movie mode can be started with "m" and stopped with "s". 
-F11 will make the window full-screen and ESC will close it.
+Click in the display window to allow interaction. Resize the window
+to your liking and zoom in with a mouse wheel or touchpad gesture.
+The image stretch is based at the low end on the pixel values in the
+currently-zoomed view (the currently-visible pixels). At the high end
+the stretch is based on the timeline-fitter flux.
+
+The display is intended to allow rapid inspection of the source list.
+Here are the key mappings:
+
+* Left-arrow, down-arrow, or spacebar: go to the next source in the list.
+* Right-arrow or up-arrow: go backward one source.
+* L or l: print in your terminal all the information for the current source that was 
+queried from the database.
+* M or m: Start movie mode (center on sources automatically)
+* S or s: Stop movie mode
+* F11: make the display window full-screen
+* Esc: close the display window
 
 ## Running in an interactive session
 
