@@ -96,6 +96,7 @@ The source list must be a Pandas dataframe including these columns:
 
 * `sourceid`
 * `ra` and `dec`
+* `fluxtml`
 * `ratml` and `dectml`, if `tmlcolor` is not None
 * `ratm2` and `dectm2`, if `tm2color` is not None
 
