@@ -68,8 +68,14 @@ class SourceInspectCamera(PanZoomCamera):
         # update image data
         imsect = self.img_data[int(self.rect.bottom):int(self.rect.top),
                int(self.rect.left):int(self.rect.right)]
-        self.image.set_data(bytescale(self.img_data,cmin=0.8*np.nanmin(imsect),
-                       cmax=1.02*np.nanmax(imsect)))
+        cmin = 0.8*np.nanmin(imsect)
+        cmax = 1.02*np.nanmax(imsect)
+        print(cmin,cmax)
+        #cmin = -0.01 + 1.2*self.sources['background'][self.sources.index==self.index].values[0]
+        cmax = 1.2*self.sources['fluxtml'][self.sources.index==self.index].values[0]/1000.0
+        print(cmin,cmax)
+        self.image.set_data(bytescale(self.img_data,
+                     cmin=cmin, cmax=cmax))
         # add a label (take out 'cause this kills the performance)
         #txt = scene.visuals.Text('sourceid {}'.format(self.sources['sourceid'][self.index]),
         #     parent=self.viewbox, font_size=14, color='green',
