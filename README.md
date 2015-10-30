@@ -16,7 +16,7 @@ A development version of
 The module `spscinspector.py` can be run as a standalone script with arguments
 of observation id, arrayname (PSW, PMW or PLW), and 
 the top-level path of a directory containing maps of the form 
-`obsidarrayname_map.fits.zip`. It will query the database for the 
+`obsidarrayname_map.fits.zip`or `obsidarrayname_pmd.fits.zip`. It will query the database for the 
 specified obsid and arrayname; find the corresponding map; and bring up a 
 display window of the image with sources overlaid.
 
