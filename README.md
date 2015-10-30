@@ -59,7 +59,10 @@ An example calling sequence inside an interactive session with defaults is:
 
 ```
 import spscinspector
-sources = spscinspector.sourcelist_pscdb(1342231851,'PSW')
-img_data, mrkr_size, wcs = spscinspector.find_map(1342234784,'PSW','~/data/spsc/level2/20151007')
-spscinspector.display_sources(sources, img_data, mrkr_size, wcs)
+myobsid = 1342231851
+myarray = 'PSW'
+sources = spscinspector.sourcelist_pscdb(myobsid, myarray)
+img_data, mrkr_size, img_wcs = \
+     spscinspector.find_map(myobsid,myarray,'~/data/spsc/level2/20151007')
+spscinspector.display_sources(sources, img_data, mrkr_size, img_wcs)
 ```
