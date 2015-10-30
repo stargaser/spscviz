@@ -8,6 +8,7 @@
 """
 Simple use of SceneCanvas to display an Image.
 """
+from __future__ import print_function
 import sys
 import os
 from vispy import scene, app, visuals, gloo
@@ -22,6 +23,7 @@ from vispy.geometry import Rect
 from vispy.scene import PanZoomCamera
 from vispy.util import keys
 from vispy.app import Timer
+
 
 class SourceInspectCamera(PanZoomCamera):
     """
@@ -275,7 +277,7 @@ if __name__ == '__main__' and sys.flags.interactive == 0:
     obsid = args.obsid
     arrayname = args.array
     mapdir = args.mapdir
-    print('loading sources from database for {} {}...'.format(obsid,arrayname), end='', flush=True)
+    print('loading sources from database for {} {}...'.format(obsid,arrayname), end='')
     sources = sourcelist_pscdb(obsid, arrayname)
     print('done.')
     img_data, mrkr_size, wcs = find_map(obsid, arrayname, mapdir)
