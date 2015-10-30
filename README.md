@@ -4,9 +4,10 @@ This module has been developed for fast viewing of candidates from the SPIRE Poi
 Source Catalog. Its intended audience is the people working to make the catalog --
 in practical terms this applies only to access to the working database.
 
-Astropy, vispy, numpy and pandas are required. All the dependencies
+Astropy, vispy, psycopg2, numpy and pandas are required. All the dependencies
 except vispy and psycopg2 are available in a scientific Python distribution
 such as [Anaconda](https://www.continuum.io/downloads). 
+
 A development version of 
 [vispy](http://vispy.org) (0.5.0 track) is needed and can be installed with
 `pip install https://github.com/vispy/vispy/archive/master.zip`. 
