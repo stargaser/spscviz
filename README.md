@@ -75,7 +75,10 @@ img_data, mrkr_size, img_wcs = \
 spscinspector.display_sources(sources, img_data, mrkr_size, img_wcs)
 ```
 
-To try a different color scheme, change the display line:
+### Tailoring colors or removing markers
+
+To try a different color scheme, (and to turn off the markers for the
+first run of timeline fitter), change the display line:
 ```
 spscinspector.display_sources(sources, img_data, mrkr_size, img_wcs,
    cmap='fire', susscolor='black',tmlcolor=None,tm2color='yellow')
@@ -85,4 +88,36 @@ To get a list of available colormap names:
 ```
 import vispy
 vispy.color.get_colormaps()
+```
+
+### Tailoring the source list
+
+The source list must be a Pandas dataframe including these columns:
+
+* `sourceid`
+* `ra` and `dec`
+* `ratml` and `dectml`, if `tmlcolor` is not None
+* `ratm2` and `dectm2`, if `tm2color` is not None
+
+The default query in `spscinspector.sourcelist_pscdb` retrieves a number of other
+parameters. In an interactive session, you may wish to use a different query to
+the database, or to load the source list dataframe from some other data source.
+
+To change the query, use the lines from the `sourcelist_pscdb` function and change
+the SQL query as desired.
+```
+import psycopg2 as pg
+import pandas.io.sql as psql
+obsid = 1342231851
+array = 'PSW'
+with pg.connect("dbname=spire user=spire host=psc.ipac.caltech.edu") as connection:
+    sources = psql.read_sql("""
+        select sourceid, obsid, arrayname, x, y,
+        ra, dec, flux, background, quality,
+        ratml, dectml, fluxtml, backgroundparm1tml,
+        ratm2, dectm2, fluxtm2, qualitydao
+        from source
+        where obsid={} and arrayname='{}'
+        order by sourceid asc""".format(obsid, arrayname),
+        connection)
 ```
