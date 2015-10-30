@@ -195,7 +195,8 @@ def sourcelist_pscdb(obsid, arrayname):
             connection)
     return(sources)
 
-def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays'):
+def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays',
+        susscolor="blue", tmlcolor="green", tm2color="orange"):
     """
     display sources overlaid on image
 
@@ -247,17 +248,20 @@ def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays'):
     view.camera = SourceInspectCamera(image,img_data,sources,pos,index=0,aspect=1)
     view.camera.set_range()
     # Add the markers
-    p1 = scene.visuals.Markers(parent=view.scene)
-    p1.set_data(pos,
-             face_color=None, edge_color="white", scaling=True,
+    if (susscolor != None):
+        p1 = scene.visuals.Markers(parent=view.scene)
+        p1.set_data(pos,
+             face_color=None, edge_color=susscolor, scaling=True,
              edge_width=2.0, size=mrkr_size)
-    p2 = scene.visuals.Markers(parent=view.scene)
-    p2.set_data(postml,
-             face_color=None, edge_color="green", scaling=True,
+    if (tmlcolor != None):
+        p2 = scene.visuals.Markers(parent=view.scene)
+        p2.set_data(postml,
+             face_color=None, edge_color=tmlcolor, scaling=True,
              edge_width=1.5, size=mrkr_size)
-    p3 = scene.visuals.Markers(parent=view.scene)
-    p3.set_data(postm2,
-             face_color=None, edge_color="orange", scaling=True,
+    if (tm2color != None):
+        p3 = scene.visuals.Markers(parent=view.scene)
+        p3.set_data(postm2,
+             face_color=None, edge_color=tm2color, scaling=True,
              edge_width=1.5, size=mrkr_size)
     app.run()
     return
