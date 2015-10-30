@@ -74,3 +74,15 @@ img_data, mrkr_size, img_wcs = \
      spscinspector.find_map(myobsid,myarray,'~/data/spsc/level2/20151007')
 spscinspector.display_sources(sources, img_data, mrkr_size, img_wcs)
 ```
+
+To try a different color scheme, change the display line:
+```
+spscinspector.display_sources(sources, img_data, mrkr_size, wcs,
+   cmap='fire', susscolor='black',tmlcolor=None,tm2color='yellow')
+```
+
+To get a list of available colormap names:
+```
+import vispy
+vispy.color.get_colormaps()
+```
