@@ -182,9 +182,9 @@ def sourcelist_pscdb(obsid, arrayname):
     with pg.connect("dbname=spire user=spire host=psc.ipac.caltech.edu") as connection:
         sources = psql.read_sql("""
             select sourceid, obsid, arrayname, x, y,
-            ra, dec, flux, background,
+            ra, dec, flux, background, quality,
             ratml, dectml, fluxtml, backgroundparm1tml,
-            ratm2, dectm2, fluxtm2
+            ratm2, dectm2, fluxtm2, qualitydao
             from source
             where obsid={} and arrayname='{}'
             order by sourceid asc""".format(obsid, arrayname),
