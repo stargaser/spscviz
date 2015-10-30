@@ -146,6 +146,7 @@ def find_map(obsid, arrayname, mapdir, template="{}{}_map.fits.zip"):
     --------
     img_data : numpy array of image data
     mrkr_size : size of markers in pixels
+    wcs : astropy.wcs object for the image
     """
     fname = template.format(obsid, arrayname)
     fullname = fname
@@ -165,7 +166,7 @@ def find_map(obsid, arrayname, mapdir, template="{}{}_map.fits.zip"):
     beams = {'PSW':17.0, 'PMW':32.0, 'PLW':42.0}
     beam_size = beams[arrayname]/3600.
     mrkr_size = beam_size/deg_per_pix
-    return(img_data, mrkr_size)
+    return(img_data, mrkr_size, img_wcs)
 
 def sourcelist_pscdb(obsid, arrayname):
     """ Return dataframe from source table
@@ -183,17 +184,28 @@ def sourcelist_pscdb(obsid, arrayname):
     import pandas.io.sql as psql
     with pg.connect("dbname=spire user=spire host=psc.ipac.caltech.edu") as connection:
         sources = psql.read_sql("""
-            select sourceid, obsid, arrayname, x, y
+            select sourceid, obsid, arrayname, x, y,
+            ra, dec, flux, background,
+            ratml, dectml, fluxtml, backgroundparm1tml,
+            ratm2, dectm2, fluxtm2
             from source
             where obsid={} and arrayname='{}'
             order by sourceid asc""".format(obsid, arrayname),
             connection)
     return(sources)
 
-def display_sources(sources, img_data, mrkr_size):
+def display_sources(sources, img_data, mrkr_size, wcs):
     nsrc = len(sources)
 
-    pos = np.vstack([sources['x'].data, sources['y'].data]).T
+    sworld = np.vstack([sources['ra'].values,sources['dec'].values]).T
+
+    pos = wcs.wcs_world2pix(sworld,0)
+
+    tmlworld = np.vstack([sources['ratml'].values,sources['dectml'].values]).T
+    postml = wcs.wcs_world2pix(tmlworld,0)
+
+    tm2world = np.vstack([sources['ratm2'].values,sources['dectm2'].values]).T
+    postm2 = wcs.wcs_world2pix(tm2world,0)
 
     keydict = dict(escape='close', p=lambda x: max(0,i-1),
         n=lambda x: min(nsrc,i+1))
@@ -223,6 +235,14 @@ def display_sources(sources, img_data, mrkr_size):
     p1.set_data(pos,
              face_color=None, edge_color="white", scaling=True,
              edge_width=1.5, size=mrkr_size)
+    p2 = scene.visuals.Markers(parent=view.scene)
+    p2.set_data(postml,
+             face_color=None, edge_color="green", scaling=True,
+             edge_width=1.5, size=mrkr_size)
+    p3 = scene.visuals.Markers(parent=view.scene)
+    p3.set_data(postm2,
+             face_color=None, edge_color="orange", scaling=True,
+             edge_width=1.5, size=mrkr_size)
     app.run()
     return
 
@@ -240,5 +260,5 @@ if __name__ == '__main__' and sys.flags.interactive == 0:
     print('loading sources from database for {} {}...'.format(obsid,arrayname), end='', flush=True)
     sources = sourcelist_pscdb(obsid, arrayname)
     print('done.')
-    img_data, mrkr_size = find_map(obsid, arrayname, mapdir)
-    display_sources(sources, img_data, mrkr_size)
+    img_data, mrkr_size, wcs = find_map(obsid, arrayname, mapdir)
+    display_sources(sources, img_data, mrkr_size, wcs)
