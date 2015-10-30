@@ -218,12 +218,6 @@ def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays',
 
     pos = wcs.wcs_world2pix(sworld,0) + 0.5
 
-    tmlworld = np.vstack([sources['ratml'].values,sources['dectml'].values]).T
-    postml = wcs.wcs_world2pix(tmlworld,0) + 0.5
-
-    tm2world = np.vstack([sources['ratm2'].values,sources['dectm2'].values]).T
-    postm2 = wcs.wcs_world2pix(tm2world,0) + 0.5
-
     keydict = dict(escape='close', p=lambda x: max(0,i-1),
         n=lambda x: min(nsrc,i+1))
 
@@ -254,11 +248,15 @@ def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays',
              face_color=None, edge_color=susscolor, scaling=True,
              edge_width=2.0, size=mrkr_size)
     if (tmlcolor != None):
+        tmlworld = np.vstack([sources['ratml'].values,sources['dectml'].values]).T
+        postml = wcs.wcs_world2pix(tmlworld,0) + 0.5
         p2 = scene.visuals.Markers(parent=view.scene)
         p2.set_data(postml,
              face_color=None, edge_color=tmlcolor, scaling=True,
              edge_width=1.5, size=mrkr_size)
     if (tm2color != None):
+        tm2world = np.vstack([sources['ratm2'].values,sources['dectm2'].values]).T
+        postm2 = wcs.wcs_world2pix(tm2world,0) + 0.5
         p3 = scene.visuals.Markers(parent=view.scene)
         p3.set_data(postm2,
              face_color=None, edge_color=tm2color, scaling=True,
