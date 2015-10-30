@@ -75,7 +75,8 @@ myarray = 'PSW'
 sources = spscinspector.sourcelist_pscdb(myobsid, myarray)
 img_data, mrkr_size, img_wcs = \
      spscinspector.find_map(myobsid,myarray,'~/data/spsc/level2/20151007')
-spscinspector.display_sources(sources, img_data, mrkr_size, img_wcs)
+titlestring = "SPSC: {} {}".format(myobsid, myarray)
+display_sources(sources, img_data, mrkr_size, wcs, titlestring=titlestring)
 ```
 
 ### Tailoring colors or removing markers
