@@ -127,10 +127,7 @@ class SourceInspectCamera(PanZoomCamera):
             #    self.poslist = self.poslist[ind]
 
             elif event.key == 'L':
-                print('sourceid {}, ({},{})'.format(
-                     self.sources['sourceid'][self.index],
-                     self.poslist[self.index][0],
-                     self.poslist[self.index][1]))
+                print(self.sources[self.sources.sourceid==self.sources['sourceid'][self.index]])
 
 def find_map(obsid, arrayname, mapdir, template="{}{}_map.fits.zip"):
     """ Walk the map directory and return the map data and marker size
@@ -199,13 +196,13 @@ def display_sources(sources, img_data, mrkr_size, wcs):
 
     sworld = np.vstack([sources['ra'].values,sources['dec'].values]).T
 
-    pos = wcs.wcs_world2pix(sworld,0)
+    pos = wcs.wcs_world2pix(sworld,0) + 0.5
 
     tmlworld = np.vstack([sources['ratml'].values,sources['dectml'].values]).T
-    postml = wcs.wcs_world2pix(tmlworld,0)
+    postml = wcs.wcs_world2pix(tmlworld,0) + 0.5
 
     tm2world = np.vstack([sources['ratm2'].values,sources['dectm2'].values]).T
-    postm2 = wcs.wcs_world2pix(tm2world,0)
+    postm2 = wcs.wcs_world2pix(tm2world,0) + 0.5
 
     keydict = dict(escape='close', p=lambda x: max(0,i-1),
         n=lambda x: min(nsrc,i+1))
@@ -234,7 +231,7 @@ def display_sources(sources, img_data, mrkr_size, wcs):
     p1 = scene.visuals.Markers(parent=view.scene)
     p1.set_data(pos,
              face_color=None, edge_color="white", scaling=True,
-             edge_width=1.5, size=mrkr_size)
+             edge_width=2.0, size=mrkr_size)
     p2 = scene.visuals.Markers(parent=view.scene)
     p2.set_data(postml,
              face_color=None, edge_color="green", scaling=True,
