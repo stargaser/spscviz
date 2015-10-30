@@ -39,7 +39,8 @@ increments through the sources.
 The mouse wheel or equivalent can be used for zooming. 
 The image stretch is based at the lowe end on the pixel values in the currently-zoomed
 portion of the image, and at the upper end by the timeline-fitter flux
-Pressing letter "L" will print the current sourceid and x,y pixel location.
+Pressing letter "L" will print (in your terminal) all the information for the
+current source that was queried from the database.
 A movie mode can be started with "m" and stopped with "s". 
 F11 will make the window full-screen and ESC will close it.
 
