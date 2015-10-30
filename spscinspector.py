@@ -68,11 +68,10 @@ class SourceInspectCamera(PanZoomCamera):
         # update image data
         imsect = self.img_data[int(self.rect.bottom):int(self.rect.top),
                int(self.rect.left):int(self.rect.right)]
-        imin, imax = np.nanpercentile(imsect, [10.0, 99.0])
-        print(imin,imax)
+        imin, imax = np.nanpercentile(imsect, [5.0, 99.0])
         #cmin = -0.01 + 1.2*self.sources['background'][self.sources.index==self.index].values[0]
-        smax = 1.2*self.sources['fluxtml'][self.sources.index==self.index].values[0]/1000.0 + imin
-        print(imin,imax,smax)
+        smax = 1.2*self.sources['fluxtml'][self.sources.index==self.index].values[0]/1000.0 - imin
+        #print(imin,imax,smax)
         self.image.set_data(bytescale(self.img_data,
                      cmin=imin, cmax=smax))
         # add a label (take out 'cause this kills the performance)
