@@ -198,7 +198,8 @@ def sourcelist_pscdb(obsid, arrayname):
     return(sources)
 
 def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays',
-        susscolor="blue", tmlcolor="green", tm2color="orange"):
+        susscolor="blue", tmlcolor="green", tm2color="orange",
+        titlestring="SPIRE PSC"):
     """
     display sources overlaid on image
 
@@ -226,6 +227,7 @@ def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays',
     #canvas = scene.SceneCanvas(keys=keydict)
     canvas = scene.SceneCanvas(keys='interactive')
     canvas.size = img_data.shape
+    canvas.title = titlestring
     canvas.show()
 
     # Set viewbox to display the image with interactive pan/zoom
@@ -281,4 +283,5 @@ if __name__ == '__main__' and sys.flags.interactive == 0:
     sources = sourcelist_pscdb(obsid, arrayname)
     print('done.')
     img_data, mrkr_size, wcs = find_map(obsid, arrayname, mapdir)
-    display_sources(sources, img_data, mrkr_size, wcs)
+    titlestring = "SPSC: {} {}".format(obsid, arrayname)
+    display_sources(sources, img_data, mrkr_size, wcs, titlestring=titlestring)
