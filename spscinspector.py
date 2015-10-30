@@ -68,14 +68,13 @@ class SourceInspectCamera(PanZoomCamera):
         # update image data
         imsect = self.img_data[int(self.rect.bottom):int(self.rect.top),
                int(self.rect.left):int(self.rect.right)]
-        cmin = 0.8*np.nanmin(imsect)
-        cmax = 1.02*np.nanmax(imsect)
-        print(cmin,cmax)
+        imin, imax = np.nanpercentile(imsect, [10.0, 99.0])
+        print(imin,imax)
         #cmin = -0.01 + 1.2*self.sources['background'][self.sources.index==self.index].values[0]
-        cmax = 1.2*self.sources['fluxtml'][self.sources.index==self.index].values[0]/1000.0
-        print(cmin,cmax)
+        smax = 1.2*self.sources['fluxtml'][self.sources.index==self.index].values[0]/1000.0 + imin
+        print(imin,imax,smax)
         self.image.set_data(bytescale(self.img_data,
-                     cmin=cmin, cmax=cmax))
+                     cmin=imin, cmax=smax))
         # add a label (take out 'cause this kills the performance)
         #txt = scene.visuals.Text('sourceid {}'.format(self.sources['sourceid'][self.index]),
         #     parent=self.viewbox, font_size=14, color='green',
@@ -197,7 +196,22 @@ def sourcelist_pscdb(obsid, arrayname):
             connection)
     return(sources)
 
-def display_sources(sources, img_data, mrkr_size, wcs):
+def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays'):
+    """
+    display sources overlaid on image
+
+    Parameters:
+    -----------
+    sources : dataframe including ra and dec values
+    img_data : numpy array of the image
+    mrkr_size : diameter of the markers in pixel units
+    wcs : astropy.wcs wcs object for the image (to convert ra,dec to pixels)
+    cmap : vispy color map, defaults to 'grays'. See vispy.colors.get_colormaps()
+
+    Returns:
+    --------
+    None
+    """
     nsrc = len(sources)
 
     sworld = np.vstack([sources['ra'].values,sources['dec'].values]).T
@@ -228,7 +242,7 @@ def display_sources(sources, img_data, mrkr_size, wcs):
     image = scene.visuals.Image(bytescale(img_data, cmin=0.9*np.nanmin(img_data),
                                       cmax=1.02*np.nanmax(img_data)),
                             #clim=(0.8*np.nanmin(img_data), 1.05*np.nanmax(img_data)),
-                            cmap='grays',
+                            cmap=cmap,
                             parent=view.scene)
     # Set 2D camera (the camera will scale to the contents in the scene)
     view.camera = SourceInspectCamera(image,img_data,sources,pos,index=0,aspect=1)
