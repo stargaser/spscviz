@@ -4,15 +4,32 @@ This module has been developed for fast viewing of candidates from the SPIRE Poi
 Source Catalog. Its intended audience is the people working to make the catalog --
 in practical terms this applies only to access to the working database.
 
-Astropy, vispy, psycopg2, numpy and pandas are required. All the dependencies
+Astropy, vispy, psycopg2, numpy and pandas are required. 
+
+## Installation instructions
+
+All the dependencies
 except vispy and psycopg2 are available in a scientific Python distribution
 such as [Anaconda](https://www.continuum.io/downloads). 
 
-A development version of 
-[vispy](http://vispy.org) (0.5.0 track) is needed and can be installed with
-`pip install https://github.com/vispy/vispy/archive/master.zip`. 
+1. Install Anaconda from https://www.continuum.io/downloads#_macosx
+It is recommended to install the Python 3.5 version. However, spscviz should 
+work with the Python 2.7 version.
 
-The psycopg2 package can be installed with Anaconda using `conda install psycopg2`.
+After installation, check that `which python` and `which pip` point to your 
+Anaconda installation.
+
+2. Install psycopg2
+`conda install psycopg2`
+
+3. Install the development version of VisPy:
+First, check that `pip` is in your path from Anaconda by checking the output of `which pip`.
+Then, install with `pip install https://github.com/vispy/vispy/archive/master.zip`
+
+4. From https://github.com/stargaser/spscviz download the `spscinspector.py` file. 
+Then make it executable with `chmod +x spscinspector.py`. 
+Then you should be able to run `spscinspector.py` as a script, if the python in 
+your path is the Anaconda one. 
 
 ## Running as a script
 
