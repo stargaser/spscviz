@@ -16,15 +16,16 @@ such as [Anaconda](https://www.continuum.io/downloads).
 It is recommended to install the Python 3.5 version. However, spscviz should 
 work with the Python 2.7 version.
 
-After installation, check that `which python` and `which pip` point to your 
+2. After installing Anaconda, check that `which python` and `which pip` point to your 
 Anaconda installation.
 
-2. Install psycopg2
+3. Install psycopg2\s\s
 `conda install psycopg2`
 
 3. Install the development version of VisPy:
 First, check that `pip` is in your path from Anaconda by checking the output of `which pip`.
-Then, install with `pip install https://github.com/vispy/vispy/archive/master.zip`
+Then, install with\s\s 
+`pip install https://github.com/vispy/vispy/archive/master.zip`
 
 4. From https://github.com/stargaser/spscviz download the `spscinspector.py` file. 
 Then make it executable with `chmod +x spscinspector.py`. 
