@@ -24,6 +24,7 @@ from vispy.scene import PanZoomCamera
 from vispy.util import keys
 from vispy.app import Timer
 
+is_pacs = False
 
 class SourceInspectCamera(PanZoomCamera):
     """
@@ -72,7 +73,10 @@ class SourceInspectCamera(PanZoomCamera):
                int(self.rect.left):int(self.rect.right)]
         imin, imax = np.nanpercentile(imsect, [5.0, 99.0])
         #cmin = -0.01 + 1.2*self.sources['background'][self.sources.index==self.index].values[0]
-        smax = 1.2*self.sources['fluxtml'][self.sources.index==self.index].values[0]/1000.0 + imin
+        if (is_pacs):
+            smax = 1.2*self.sources['fluxtml'][self.sources.index==self.index].values[0]/1000.0/10.0 + imin
+        else:
+            smax = 1.2*self.sources['fluxtml'][self.sources.index==self.index].values[0]/1000.0 + imin
         #print(imin,imax,smax)
         self.image.set_data(bytescale(self.img_data,
                      cmin=imin, cmax=smax))
@@ -135,15 +139,15 @@ class SourceInspectCamera(PanZoomCamera):
             elif event.key == 'L':
                 print(self.sources[self.sources.sourceid==self.sources['sourceid'][self.index]])
 
-def find_map(obsid, arrayname, mapdir, template="{}{}_map.fits.zip"):
+def find_map(obsid, band, mapdir, template="{}{}_map.fits.zip"):
     """ Walk the map directory and return the map data and marker size
 
     Parameters:
     -----------
     obsid (int): observation id (10-digit integer)
-    arrayname (string) : PSW, PMW or PLW
+    band (string) : blue, green, red, PSW, PMW or PLW
     mapdir (string) : top-level of map directory
-    template (string) : how to format obsid and arrayname into a map name
+    template (string) : how to format obsid and filter into a map name
 
     Returns:
     --------
@@ -151,7 +155,12 @@ def find_map(obsid, arrayname, mapdir, template="{}{}_map.fits.zip"):
     mrkr_size : size of markers in pixels
     wcs : astropy.wcs object for the image
     """
-    fname = template.format(obsid, arrayname)
+    filter =  band
+    if (band == 'blue') | (band == 'green'):
+       filter = 'B'
+    else:
+       filter = 'R'
+    fname = template.format(obsid, filter)
     fullname = fname
     for root, dir, files in os.walk(os.path.expanduser(mapdir), followlinks=True):
         for name in files:
@@ -161,23 +170,31 @@ def find_map(obsid, arrayname, mapdir, template="{}{}_map.fits.zip"):
             elif name.endswith(fname.replace('map','pmd')):
                 fullname = os.path.join(root, fname.replace('map','pmd'))
                 break
+            elif name.endswith(fname.replace('L25','L3')):
+                fullname = os.path.join(root, fname.replace('L25','L3'))
+                break
+            elif name.endswith(fname.replace('L25','L2').replace('JSMAP','PMAP')):
+                fullname = os.path.join(root, fname.replace('L25','L2').replace('JSMAP','PMAP'))
+                break
     # Get the data
     hdu = fits.open(fullname)
     img_data = hdu[1].data
+    del hdu[1].header['CUNIT1'], hdu[1].header['CUNIT2']
     img_wcs = WCS(hdu[1].header)
     deg_per_pix = np.sqrt(np.abs(np.linalg.det(img_wcs.pixel_scale_matrix)))
-    beams = {'PSW':17.0, 'PMW':32.0, 'PLW':42.0}
-    beam_size = beams[arrayname]/3600.
+    beams = {'blue':5.5, 'green':7.0, 'red':11.5, 'PSW':17.0, 'PMW':32.0, 'PLW':42.0}
+    beam_size = beams[band]/3600.
     mrkr_size = beam_size/deg_per_pix
     return(img_data, mrkr_size, img_wcs)
 
-def sourcelist_pscdb(obsid, arrayname):
+def sourcelist_pscdb(obsid, band, is_pacs=False):
     """ Return dataframe from source table
 
     Parameters:
     -----------
     obsid (int): observation id (10-digit integer)
-    arrayname (string) : PSW, PMW or PLW
+    band (string) : red, green, blue, PSW, PMW or PLW
+    is_pacs (bool) : True if PACS, False if SPIRE
 
     Returns:
     --------
@@ -185,17 +202,27 @@ def sourcelist_pscdb(obsid, arrayname):
     """
     import psycopg2 as pg
     import pandas.io.sql as psql
-    with pg.connect("dbname=spire user=spire host=psc.ipac.caltech.edu") as connection:
-        sources = psql.read_sql("""
-            select sourceid, obsid, arrayname, x, y,
-            ra, dec, flux, background, quality,
-            ratml, dectml, fluxtml, backgroundparm1tml,
-            ratm2, dectm2, fluxtm2, qualitydao
-            from source
-            where obsid={} and arrayname='{}'
-            order by sourceid asc""".format(obsid, arrayname),
-            connection)
-    return(sources)
+    if (is_pacs == False):
+        with pg.connect("dbname=spire user=spire host=psc.ipac.caltech.edu") as connection:
+            sources = psql.read_sql("""
+                select sourceid, obsid, arrayname, x, y,
+                ra, dec, flux, background, quality,
+                ratml, dectml, fluxtml, backgroundparm1tml,
+                ratm2, dectm2, fluxtm2, qualitydao
+                from source
+                where obsid={} and arrayname='{}'
+                order by sourceid asc""".format(obsid, band),
+                connection)
+        return(sources)
+    else:
+        with pg.connect("dbname=pacs user=gaborm host=localhost port=5562") as connection:
+            sources = psql.read_sql("""
+                select sourceid, obsid, band, susra,susdec,daora,daodec,susflux
+                from source13
+                where obsid={} and band='{}'
+                order by sourceid asc""".format(obsid, band),
+                connection)
+        return(sources)
 
 def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays',
         susscolor="blue", tmlcolor="green", tm2color="orange",
@@ -216,10 +243,14 @@ def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays',
     None
     """
     nsrc = len(sources)
-
-    sworld = np.vstack([sources['ra'].values,sources['dec'].values]).T
-
-    pos = wcs.wcs_world2pix(sworld,0) + 0.5
+    pos =  np.empty( shape=(0, 0) )
+    if (nsrc > 0):
+        if (is_pacs == True):
+            sworld = np.vstack([sources['susra'].values.astype(np.float64),
+                                sources['susdec'].values.astype(np.float64)]).T
+        else:
+            sworld = np.vstack([sources['ra'].values,sources['dec'].values]).T
+        pos = wcs.wcs_world2pix(sworld,0) + 0.5
 
     keydict = dict(escape='close', p=lambda x: max(0,i-1),
         n=lambda x: min(nsrc,i+1))
@@ -246,19 +277,19 @@ def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays',
     view.camera = SourceInspectCamera(image,img_data,sources,pos,index=0,aspect=1)
     view.camera.set_range()
     # Add the markers
-    if (susscolor != None):
+    if ((nsrc > 0) and (susscolor != None)):
         p1 = scene.visuals.Markers(parent=view.scene)
         p1.set_data(pos,
              face_color=None, edge_color=susscolor, scaling=True,
              edge_width=2.0, size=mrkr_size)
-    if (tmlcolor != None):
+    if ((nsrc > 0) and (tmlcolor != None)):
         tmlworld = np.vstack([sources['ratml'].values,sources['dectml'].values]).T
         postml = wcs.wcs_world2pix(tmlworld,0) + 0.5
         p2 = scene.visuals.Markers(parent=view.scene)
         p2.set_data(postml,
              face_color=None, edge_color=tmlcolor, scaling=True,
              edge_width=1.5, size=mrkr_size)
-    if (tm2color != None):
+    if ((nsrc > 0) and (tm2color != None)):
         tm2world = np.vstack([sources['ratm2'].values,sources['dectm2'].values]).T
         postm2 = wcs.wcs_world2pix(tm2world,0) + 0.5
         p3 = scene.visuals.Markers(parent=view.scene)
@@ -270,18 +301,31 @@ def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays',
 
 
 if __name__ == '__main__' and sys.flags.interactive == 0:
+    if (sys.argv[0].endswith('ppscinspector')):
+        is_pacs = True
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("obsid", help="observation id", type=int)
-    parser.add_argument("array", help="SPIRE array name, must be PSW, PMW or PMW")
+    if (is_pacs):
+        parser.add_argument("band", help="PACS band, must be blue, green or red")
+    else:
+        parser.add_argument("band", help="SPIRE band, must be PSW, PMW or PMW")
     parser.add_argument("mapdir", help="top-level map directory")
     args = parser.parse_args()
     obsid = args.obsid
-    arrayname = args.array
+    band = args.band
     mapdir = args.mapdir
-    print('loading sources from database for {} {}...'.format(obsid,arrayname), end='')
-    sources = sourcelist_pscdb(obsid, arrayname)
+    print('loading sources from database for {} {}...'.format(obsid,band), end='')
+    sources = sourcelist_pscdb(obsid, band, is_pacs=is_pacs)
     print('done.')
-    img_data, mrkr_size, wcs = find_map(obsid, arrayname, mapdir)
-    titlestring = "SPSC: {} {}".format(obsid, arrayname)
-    display_sources(sources, img_data, mrkr_size, wcs, titlestring=titlestring)
+    if (is_pacs):
+        img_data, mrkr_size, wcs = find_map(obsid, band, mapdir, 
+                 template="{}_PACS_L25_HPPJSMAP{}_SPGv13.0.0.fits.gz")
+    if (is_pacs == True):
+        titlestring = "PPSC: {} {}".format(obsid, band)
+        display_sources(sources, img_data, mrkr_size, wcs, titlestring=titlestring,
+            tmlcolor=None, tm2color=None)
+    else:
+        titlestring = "SPSC: {} {}".format(obsid, band)
+        display_sources(sources, img_data, mrkr_size, wcs, titlestring=titlestring)
+    
