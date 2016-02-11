@@ -19,12 +19,12 @@ work with the Python 2.7 version.
 2. After installing Anaconda, check that `which python` and `which pip` point to your 
 Anaconda installation.
 
-3. Install psycopg2\s\s
+3. Install psycopg2  
 `conda install psycopg2`
 
 3. Install the development version of VisPy:
 First, check that `pip` is in your path from Anaconda by checking the output of `which pip`.
-Then, install with\s\s 
+Then, install with  
 `pip install https://github.com/vispy/vispy/archive/master.zip`
 
 4. From https://github.com/stargaser/spscviz download the `spscinspector.py` file. 
