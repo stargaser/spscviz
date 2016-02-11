@@ -70,10 +70,10 @@ class SourceInspectCamera(PanZoomCamera):
         # update image data
         imsect = self.img_data[int(self.rect.bottom):int(self.rect.top),
                int(self.rect.left):int(self.rect.right)]
-        imin, imax = np.nanpercentile(imsect, [5.0, 99.0])
+        imin, imax = np.nanpercentile(imsect, [1.0, 95.0])
         #cmin = -0.01 + 1.2*self.sources['background'][self.sources.index==self.index].values[0]
-        smax = 1.2*self.sources['susflux'][self.sources.index==self.index].values[0]/1000.0 + imin
-        #print(imin,imax,smax)
+        smax = 1.2*self.sources['susflux'][self.sources.index==self.index].values[0]/1000.0/10.0 + imin
+        print(imin,imax,smax)
         self.image.set_data(bytescale(self.img_data,
                      cmin=imin, cmax=smax))
         # add a label (take out 'cause this kills the performance)
@@ -166,6 +166,9 @@ def find_map(obsid, band, mapdir, template="{}_PACS_L25_HPPJSMAP{}_SPGv13.0.0.fi
             elif name.endswith(fname.replace('L25','L3')):
                 fullname = os.path.join(root, fname.replace('L25','L3'))
                 break
+            elif name.endswith(fname.replace('L25','L2').replace('JSMAP','PMAP')):
+                fullname = os.path.join(root, fname.replace('L25','L2').replace('JSMAP','PMAP'))
+                break
     # Get the data
     hdu = fits.open(fullname)
     img_data = hdu[1].data
@@ -192,17 +195,17 @@ def sourcelist_pscdb(obsid, band):
     """
     import psycopg2 as pg
     import pandas.io.sql as psql
-    with pg.connect("dbname=pacs") as connection:
+    with pg.connect("dbname=pacs user=gaborm host=localhost port=5562") as connection:
         sources = psql.read_sql("""
-            select sourceid, obsid, band, susra,susdec,daora,daodec,centerrafit,centerdecfit,susflux
-            from source
+            select sourceid, obsid, band, susra,susdec,daora,daodec,susflux
+            from source13
             where obsid={} and band='{}'
             order by sourceid asc""".format(obsid, band),
             connection)
     return(sources)
 
 def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays',
-        susscolor="blue", tmlcolor="green", tm2color="orange",
+        susscolor="blue", tmlcolor=None, tm2color=None,
         titlestring="PACS PSC"):
     """
     display sources overlaid on image
@@ -221,7 +224,8 @@ def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays',
     """
     nsrc = len(sources)
 
-    sworld = np.vstack([sources['susra'].values,sources['susdec'].values]).T
+    sworld = np.vstack([sources['susra'].values.astype(np.float64),
+                        sources['susdec'].values.astype(np.float64)]).T
 
     pos = wcs.wcs_world2pix(sworld,0) + 0.5
 
@@ -277,7 +281,7 @@ if __name__ == '__main__' and sys.flags.interactive == 0:
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("obsid", help="observation id", type=int)
-    parser.add_argument("array", help="SPIRE array name, must be PSW, PMW or PMW")
+    parser.add_argument("array", help="PACS band name, must be blue, green or red")
     parser.add_argument("mapdir", help="top-level map directory")
     args = parser.parse_args()
     obsid = args.obsid
@@ -287,5 +291,5 @@ if __name__ == '__main__' and sys.flags.interactive == 0:
     sources = sourcelist_pscdb(obsid, band)
     print('done.')
     img_data, mrkr_size, wcs = find_map(obsid, band, mapdir)
-    titlestring = "SPSC: {} {}".format(obsid, band)
+    titlestring = "PPSC: {} {}".format(obsid, band)
     display_sources(sources, img_data, mrkr_size, wcs, titlestring=titlestring)
