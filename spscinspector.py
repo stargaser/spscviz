@@ -229,14 +229,19 @@ def find_map(obsid, band, mapdir, template="{}{}_map.fits.zip"):
     mrkr_size = beam_size/deg_per_pix
     return(img_data, filter, mrkr_size, img_wcs)
 
-def sourcelist_pscdb(obsid, filter, is_pacs=False):
+def sourcelist_pscdb(obsid, filter, sql_statement, dbname, username,
+                     hostname, port=5432):
     """ Return dataframe from source table
 
     Parameters:
     -----------
     obsid (int): observation id (10-digit integer)
     filter (string) : red, green, blue, PSW, PMW or PLW
-    is_pacs (bool) : True if PACS, False if SPIRE
+    sql_statement (string) : Query to database
+    dbname (string) : database name
+    username (string) : user name
+    hostname (string) : host name
+    port (int) : port for connecting to server, defaults to 5432
 
     Returns:
     --------
@@ -244,26 +249,9 @@ def sourcelist_pscdb(obsid, filter, is_pacs=False):
     """
     import psycopg2 as pg
     import pandas.io.sql as psql
-    if (is_pacs == False):
-        with pg.connect("dbname=spire user=spire host=psc.ipac.caltech.edu") as connection:
-            sources = psql.read_sql("""
-                select sourceid, obsid, arrayname, x, y,
-                ra, dec, flux, background, quality,
-                ratml, dectml, fluxtml, backgroundparm1tml,
-                ratm2, dectm2, fluxtm2, qualitydao
-                from source
-                where obsid={} and arrayname='{}'
-                order by sourceid asc""".format(obsid, filter),
-                connection)
-        return(sources)
-    else:
-        with pg.connect("dbname=pacs user=gaborm host=localhost port=5562") as connection:
-            sources = psql.read_sql("""
-                select sourceid, obsid, band, susra,susdec,daora,daodec,susflux
-                from source13
-                where obsid={} and band='{}'
-                order by sourceid asc""".format(obsid, filter),
-                connection)
+    with pg.connect("dbname={} user={} host={} port={}".format(dbname, username,
+                                 hostname, port)) as connection:
+        sources = psql.read_sql(sql_statement.format(obsid,filter), connection)
         return(sources)
 
 def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays',
@@ -356,6 +344,42 @@ if __name__ == '__main__' and sys.flags.interactive == 0:
     else:
         parser.add_argument("band", help="SPIRE band, must be PSW, PMW or PMW")
     parser.add_argument("mapdir", help="top-level map directory")
+    parser.add_argument("cmap", help="color map, (grays|fire)", nargs='?', default="grays")
+    if (is_pacs):
+        sql_statement = """
+                select sourceid, obsid, band, susra,susdec,daora,daodec,susflux
+                from source13
+                where obsid={} and band='{}'
+                order by sourceid asc
+        """
+        dbname="pacs"
+        username="gaborm"
+        hostname="localhost"
+        port=5562
+    else:
+        sql_statement = """
+                select sourceid, obsid, arrayname, x, y,
+                ra, dec, flux, background, quality,
+                ratml, dectml, fluxtml, backgroundparm1tml,
+                ratm2, dectm2, fluxtm2, qualitydao
+                from source
+                where obsid={} and arrayname='{}'
+                order by sourceid asc
+        """
+        dbname="spire"
+        username="spire"
+        hostname="psc.ipac.caltech.edu"
+        port=5432
+    parser.add_argument("-S", "--sql_statement", help="SQL statement, default=\"{}\"".format(sql_statement),
+                        nargs='?', default=sql_statement)
+    parser.add_argument("-D", "--dbname", help="database name, default={}".format(dbname),
+                        nargs='?', default=dbname)
+    parser.add_argument("-U", "--username", help="database username, default={}".format(username),
+                        nargs='?', default=username)
+    parser.add_argument("-H", "--hostname", help="database hostname, default={}".format(hostname),
+                        nargs='?', default=hostname)
+    parser.add_argument("-P", "--port", help="database port, default {}".format(port),
+                        nargs='?', default=port)
     args = parser.parse_args()
     obsid = args.obsid
     band = args.band
@@ -366,13 +390,17 @@ if __name__ == '__main__' and sys.flags.interactive == 0:
     else:
         img_data, filter, mrkr_size, wcs = find_map(obsid, band, mapdir)
     print('loading sources from database for {} {}...'.format(obsid,band), end='')
-    sources = sourcelist_pscdb(obsid, filter, is_pacs=is_pacs)
+    sources = sourcelist_pscdb(obsid, filter, sql_statement=args.sql_statement,
+           dbname=args.dbname,
+           username=args.username, hostname=args.hostname,
+           port=args.port)
     print('done.')
     if (is_pacs == True):
         titlestring = "PPSC: {} {}".format(obsid, filter)
         display_sources(sources, img_data, mrkr_size, wcs, titlestring=titlestring,
-            tmlcolor=None, tm2color=None)
+            tmlcolor=None, tm2color=None, cmap=args.cmap)
     else:
         titlestring = "SPSC: {} {}".format(obsid, filter)
-        display_sources(sources, img_data, mrkr_size, wcs, titlestring=titlestring)
+        display_sources(sources, img_data, mrkr_size, wcs, titlestring=titlestring,
+        cmap=args.cmap)
     

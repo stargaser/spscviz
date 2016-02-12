@@ -93,6 +93,68 @@ queried from the database.
 * F11: make the display window full-screen
 * Esc: close the display window
 
+## Optional arguments
+
+Type `spscinspector.py -h` to see the SPIRE defaults:
+
+```
+usage: spscinspector.py [-h] [-S [SQL_STATEMENT]] [-D [DBNAME]]
+                        [-U [USERNAME]] [-H [HOSTNAME]] [-P [PORT]]
+                        obsid band mapdir [cmap]
+
+positional arguments:
+  obsid                 observation id
+  band                  SPIRE band, must be PSW, PMW or PMW
+  mapdir                top-level map directory
+  cmap                  color map, (grays|fire)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -S [SQL_STATEMENT], --sql_statement [SQL_STATEMENT]
+                        SQL statement, default=" select sourceid, obsid,
+                        arrayname, x, y, ra, dec, flux, background, quality,
+                        ratml, dectml, fluxtml, backgroundparm1tml, ratm2,
+                        dectm2, fluxtm2, qualitydao from source where obsid={}
+                        and arrayname='{}' order by sourceid asc "
+  -D [DBNAME], --dbname [DBNAME]
+                        database name, default=spire
+  -U [USERNAME], --username [USERNAME]
+                        database username, default=spire
+  -H [HOSTNAME], --hostname [HOSTNAME]
+                        database hostname, default=psc.ipac.caltech.edu
+  -P [PORT], --port [PORT]
+                        database port, default 5432
+```
+
+Type `ppscinspector -h` to see the PACS defaults:
+
+```
+usage: ppscinspector [-h] [-S [SQL_STATEMENT]] [-D [DBNAME]] [-U [USERNAME]]
+                     [-H [HOSTNAME]] [-P [PORT]]
+                     obsid band mapdir [cmap]
+
+positional arguments:
+  obsid                 observation id
+  band                  PACS band, must be B or R
+  mapdir                top-level map directory
+  cmap                  color map, (grays|fire)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -S [SQL_STATEMENT], --sql_statement [SQL_STATEMENT]
+                        SQL statement, default=" select sourceid, obsid, band,
+                        susra,susdec,daora,daodec,susflux from source13 where
+                        obsid={} and band='{}' order by sourceid asc "
+  -D [DBNAME], --dbname [DBNAME]
+                        database name, default=pacs
+  -U [USERNAME], --username [USERNAME]
+                        database username, default=gaborm
+  -H [HOSTNAME], --hostname [HOSTNAME]
+                        database hostname, default=localhost
+  -P [PORT], --port [PORT]
+                        database port, default 5562
+```
+
 ## Running in an interactive session
 
 The individual functions in `spscinspector.py` can be called on 
