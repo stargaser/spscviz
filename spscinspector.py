@@ -39,6 +39,10 @@ class SourceInspectCamera(PanZoomCamera):
         self.img_data = img_data
         self.sources = sources
         self.poslist = poslist
+        #self.smin = 0.9*np.nanmin(self.img_data)
+        #self.smax = 1.02*np.nanmax(self.img_data)
+        self.smin, self.smax = np.nanpercentile(self.img_data, [5.0, 99.0])
+        self.accelerator = 5.0
         self.nsrc = len(poslist)
         self._keymap = {
             keys.UP: +1,
@@ -72,24 +76,19 @@ class SourceInspectCamera(PanZoomCamera):
         imsect = self.img_data[int(self.rect.bottom):int(self.rect.top),
                int(self.rect.left):int(self.rect.right)]
         imin, imax = np.nanpercentile(imsect, [5.0, 99.0])
+        self.smin = imin
         #cmin = -0.01 + 1.2*self.sources['background'][self.sources.index==self.index].values[0]
         if (is_pacs):
-            smax = 1.2*self.sources['susflux'][self.sources.index==self.index].values[0]/1000.0/10.0 + imin
+            self.smax = 1.2*self.sources['susflux']\
+                  [self.sources.index==self.index].values[0]/1000.0/10.0 + imin
         else:
-            smax = 1.2*self.sources['fluxtml'][self.sources.index==self.index].values[0]/1000.0 + imin
-        #print(imin,imax,smax)
-        self.image.set_data(bytescale(self.img_data,
-                     cmin=imin, cmax=smax))
-        # add a label (take out 'cause this kills the performance)
-        #txt = scene.visuals.Text('sourceid {}'.format(self.sources['sourceid'][self.index]),
-        #     parent=self.viewbox, font_size=14, color='green',
-        #     anchor_x='left', anchor_y='top')
-        #txt.pos = 10, 10
-        #rect = scene.visuals.Rectangle(height=40, width=100, color='black',
-        #          parent=self.viewbox)
-        #rect.pos = 10,10
-        #rect.update()
-        #txt.update()
+            self.smax = 1.2*self.sources['fluxtml']\
+                  [self.sources.index==self.index].values[0]/1000.0 + imin
+        self.update_scale()
+        
+    def update_scale(self):
+        self.image.set_data(bytescale(self.img_data, cmin=self.smin, cmax=self.smax))
+        self.view_changed()
 
     def on_timer(self, event):
         """Timer event handler
@@ -138,6 +137,36 @@ class SourceInspectCamera(PanZoomCamera):
 
             elif event.key == 'L':
                 print(self.sources[self.sources.sourceid==self.sources['sourceid'][self.index]])
+                
+            elif event.key == 'T':
+                sdiff = self.accelerator*(self.smax - self.smin)/255.0
+                self.smax += sdiff
+                self.smin += sdiff
+                self.update_scale()
+            
+            elif event.key == 'B':
+                sdiff = self.accelerator*(self.smax - self.smin)/255.0
+                self.smax -= sdiff
+                self.smin -= sdiff
+                self.update_scale()
+                
+            elif event.key == 'N':
+                sdiff = self.accelerator*(self.smax - self.smin)/255.0
+                self.smax -= sdiff
+                self.smin += sdiff
+                self.update_scale()
+                
+            elif event.key == 'W':
+                sdiff = self.accelerator*(self.smax - self.smin)/255.0
+                self.smax += sdiff
+                self.smin -= sdiff
+                self.update_scale()
+                
+            elif event.key == 'U':
+                print("Current stretch limits: %10.4g, %10.4g"%(self.smin, self.smax))
+                self.smin = float(input("New lower value?"))
+                self.smax = float(input("New upper value?"))
+                self.update_scale()
 
 def find_map(obsid, band, mapdir, template="{}{}_map.fits.zip"):
     """ Walk the map directory and return the map data and marker size
