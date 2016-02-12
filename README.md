@@ -40,8 +40,9 @@ your path is the Anaconda one.
 For SPIRE, the module `spscinspector.py` can be run as a standalone script with arguments
 of observation id, arrayname (PSW, PMW or PLW), and 
 the top-level path of a directory containing maps of the form 
-`{obsid}{band}_map.fits.zip`or `{obsid}{arrayname}_pmd.fits.zip`. It will query the database for the 
-specified obsid and arrayname; find the corresponding map; and bring up a 
+`{obsid}{band}_map.fits.zip`or `{obsid}{arrayname}_pmd.fits.zip`. It will find the
+corresponding map; query the database for the 
+specified obsid and band; and bring up a 
 display window of the image with sources overlaid.
 
 Circles are overlaid (by default) for the Sussextractor position (blue),
@@ -54,8 +55,9 @@ For PACS, run `ppscinspector`  as a standalone script with arguments
 of observation id, band indicator (B or R), and 
 the top-level path of a directory containing maps of the form 
 `{obsid}_PACS_L25_HPPJSMAP{band}_SPGv13.0.0.fits.gz`or 
-`{obsid}_PACS_L25_HPPPMAP{band}_SPGv13.0.0.fits.gz`. It will query the database for the 
-specified obsid and arrayname; find the corresponding map; and bring up a 
+`{obsid}_PACS_L25_HPPPMAP{band}_SPGv13.0.0.fits.gz`. It will find the corresponding map
+and infer the filter; query the database for the 
+specified obsid and filter;  and bring up a 
 display window of the image with sources overlaid.
 
 ## Data dependencies
