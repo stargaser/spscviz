@@ -128,13 +128,18 @@ vispy.color.get_colormaps()
 
 ### Tailoring the source list
 
-The source list must be a Pandas dataframe including these columns:
+For SPIRE, the source list must be a Pandas dataframe including these columns:
 
 * `sourceid`
 * `ra` and `dec`
 * `fluxtml`
 * `ratml` and `dectml`, if `tmlcolor` is not None
 * `ratm2` and `dectm2`, if `tm2color` is not None
+
+For PACS, the source list must include:
+
+* `sourceid`
+* `susra`, `susdec`, `susflux`
 
 The default query in `spscinspector.sourcelist_pscdb` retrieves a number of other
 parameters. In an interactive session, you may wish to use a different query to
