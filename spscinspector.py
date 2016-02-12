@@ -293,6 +293,9 @@ def display_sources(sources, img_data, mrkr_size, wcs, cmap='grays',
         else:
             sworld = np.vstack([sources['ra'].values,sources['dec'].values]).T
         pos = wcs.wcs_world2pix(sworld,0) + 0.5
+    else:
+        print("No sources found")
+        sys.exit(-1);
 
     keydict = dict(escape='close', p=lambda x: max(0,i-1),
         n=lambda x: min(nsrc,i+1))
