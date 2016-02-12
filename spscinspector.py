@@ -344,7 +344,11 @@ if __name__ == '__main__' and sys.flags.interactive == 0:
     else:
         parser.add_argument("band", help="SPIRE band, must be PSW, PMW or PMW")
     parser.add_argument("mapdir", help="top-level map directory")
-    parser.add_argument("cmap", help="color map, (grays|fire)", nargs='?', default="grays")
+    parser.add_argument("--cmap", 
+        help="""
+        color map, (grays|fire|ice|hot|spring|summer|
+                 autumn|winter|blues|cool|hsl|husl|diverging|cubehelixcolormap)
+        """, nargs='?', default="grays")
     if (is_pacs):
         sql_statement = """
                 select sourceid, obsid, band, susra,susdec,daora,daodec,susflux

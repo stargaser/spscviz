@@ -98,18 +98,20 @@ queried from the database.
 Type `spscinspector.py -h` to see the SPIRE defaults:
 
 ```
-usage: spscinspector.py [-h] [-S [SQL_STATEMENT]] [-D [DBNAME]]
-                        [-U [USERNAME]] [-H [HOSTNAME]] [-P [PORT]]
-                        obsid band mapdir [cmap]
+usage: spscinspector.py [-h] [--cmap [CMAP]] [-S [SQL_STATEMENT]]
+                        [-D [DBNAME]] [-U [USERNAME]] [-H [HOSTNAME]]
+                        [-P [PORT]]
+                        obsid band mapdir
 
 positional arguments:
   obsid                 observation id
   band                  SPIRE band, must be PSW, PMW or PMW
   mapdir                top-level map directory
-  cmap                  color map, (grays|fire)
 
 optional arguments:
   -h, --help            show this help message and exit
+  --cmap [CMAP]         color map, (grays|fire|ice|hot|spring|summer| autumn|w
+                        inter|blues|cool|hsl|husl|diverging|cubehelixcolormap)
   -S [SQL_STATEMENT], --sql_statement [SQL_STATEMENT]
                         SQL statement, default=" select sourceid, obsid,
                         arrayname, x, y, ra, dec, flux, background, quality,
@@ -129,18 +131,19 @@ optional arguments:
 Type `ppscinspector -h` to see the PACS defaults:
 
 ```
-usage: ppscinspector [-h] [-S [SQL_STATEMENT]] [-D [DBNAME]] [-U [USERNAME]]
-                     [-H [HOSTNAME]] [-P [PORT]]
-                     obsid band mapdir [cmap]
+usage: ppscinspector [-h] [--cmap [CMAP]] [-S [SQL_STATEMENT]] [-D [DBNAME]]
+                     [-U [USERNAME]] [-H [HOSTNAME]] [-P [PORT]]
+                     obsid band mapdir
 
 positional arguments:
   obsid                 observation id
   band                  PACS band, must be B or R
   mapdir                top-level map directory
-  cmap                  color map, (grays|fire)
 
 optional arguments:
   -h, --help            show this help message and exit
+  --cmap [CMAP]         color map, (grays|fire|ice|hot|spring|summer| autumn|w
+                        inter|blues|cool|hsl|husl|diverging|cubehelixcolormap)
   -S [SQL_STATEMENT], --sql_statement [SQL_STATEMENT]
                         SQL statement, default=" select sourceid, obsid, band,
                         susra,susdec,daora,daodec,susflux from source13 where
