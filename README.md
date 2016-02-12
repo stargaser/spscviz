@@ -1,8 +1,9 @@
 # spscviz
 
-This module has been developed for fast viewing of candidates from the SPIRE Point 
-Source Catalog. Its intended audience is the people working to make the catalog --
-in practical terms this applies only to access to the working database.
+This module has been developed for fast viewing of candidates from the
+SPIRE and PACS Point Source Catalogs. Its intended audience is the
+people working to make the catalogs -- in practical terms this applies
+only to access to the working database.
 
 Astropy, vispy, psycopg2, numpy and pandas are required. 
 
@@ -34,10 +35,12 @@ your path is the Anaconda one.
 
 ## Running as a script
 
-The module `spscinspector.py` can be run as a standalone script with arguments
+### SPIRE
+
+For SPIRE, the module `spscinspector.py` can be run as a standalone script with arguments
 of observation id, arrayname (PSW, PMW or PLW), and 
 the top-level path of a directory containing maps of the form 
-`obsidarrayname_map.fits.zip`or `obsidarrayname_pmd.fits.zip`. It will query the database for the 
+`{obsid}{band}_map.fits.zip`or `{obsid}{arrayname}_pmd.fits.zip`. It will query the database for the 
 specified obsid and arrayname; find the corresponding map; and bring up a 
 display window of the image with sources overlaid.
 
@@ -45,12 +48,23 @@ Circles are overlaid (by default) for the Sussextractor position (blue),
 the timeline-fitter first run position (green), and the timeline-fitter
 second run (orange).
 
+### PACS
+
+For PACS, run `ppscinspector`  as a standalone script with arguments
+of observation id, band indicator (B or R), and 
+the top-level path of a directory containing maps of the form 
+`{obsid}_PACS_L25_HPPJSMAP{band}_SPGv13.0.0.fits.gz`or 
+`{obsid}_PACS_L25_HPPPMAP{band}_SPGv13.0.0.fits.gz`. It will query the database for the 
+specified obsid and arrayname; find the corresponding map; and bring up a 
+display window of the image with sources overlaid.
+
 ## Data dependencies
 
 The database query assumes that the user has set up their credentials 
-in a ~/.pgpass file or equivalent.
+in a ~/.pgpass file or equivalent. For PACS, it assumes an SSH tunnel to the
+database has been set up on your local machine's port 5562.
 
-The map directory assumes that you have a local copy of the Level 2 maps.
+The map directory assumes that you have a local copy of the Level 2+ maps.
 
 ## Controlling the display 
 
