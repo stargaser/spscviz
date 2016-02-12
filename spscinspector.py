@@ -23,8 +23,10 @@ from vispy.geometry import Rect
 from vispy.scene import PanZoomCamera
 from vispy.util import keys
 from vispy.app import Timer
+import warnings
 
 is_pacs = False
+warnings.filterwarnings('ignore')
 
 class SourceInspectCamera(PanZoomCamera):
     """
@@ -41,7 +43,10 @@ class SourceInspectCamera(PanZoomCamera):
         self.poslist = poslist
         #self.smin = 0.9*np.nanmin(self.img_data)
         #self.smax = 1.02*np.nanmax(self.img_data)
-        self.smin, self.smax = np.nanpercentile(self.img_data, [5.0, 99.0])
+        pcts = np.nanpercentile(self.img_data, [5.0, 99.0])
+        if np.all(np.isfinite(pcts)):
+            self.smin = pcts[0]
+            self.smax = pcts[1]
         self.accelerator = 5.0
         self.nsrc = len(poslist)
         self._keymap = {
@@ -75,15 +80,16 @@ class SourceInspectCamera(PanZoomCamera):
         # update image data
         imsect = self.img_data[int(self.rect.bottom):int(self.rect.top),
                int(self.rect.left):int(self.rect.right)]
-        imin, imax = np.nanpercentile(imsect, [5.0, 99.0])
-        self.smin = imin
+        pcts = np.nanpercentile(imsect, [5.0, 99.0])
+        if np.all(np.isfinite(pcts)):
+            self.smin = pcts[0]
         #cmin = -0.01 + 1.2*self.sources['background'][self.sources.index==self.index].values[0]
         if (is_pacs):
             self.smax = 1.2*self.sources['susflux']\
-                  [self.sources.index==self.index].values[0]/1000.0/10.0 + imin
+                  [self.sources.index==self.index].values[0]/1000.0/10.0 + self.smin
         else:
             self.smax = 1.2*self.sources['fluxtml']\
-                  [self.sources.index==self.index].values[0]/1000.0 + imin
+                  [self.sources.index==self.index].values[0]/1000.0/0.95 + self.smin
         self.update_scale()
         
     def update_scale(self):
@@ -212,7 +218,10 @@ def find_map(obsid, band, mapdir, template="{}{}_map.fits.zip"):
            filter = 'blue'
     elif (band == 'R'):
        filter = 'red'
-    del hdu[1].header['CUNIT1'], hdu[1].header['CUNIT2']
+    # Handle illegal CUNITn in PACS SPG12 and earlier maps
+    for key in ['CUNIT1', 'CUNIT2']:
+        if key in hdu[1].header.keys():
+            del hdu[1].header[key]
     img_wcs = WCS(hdu[1].header)
     deg_per_pix = np.sqrt(np.abs(np.linalg.det(img_wcs.pixel_scale_matrix)))
     beams = {'blue':5.5, 'green':7.0, 'red':11.5, 'PSW':17.0, 'PMW':32.0, 'PLW':42.0}
