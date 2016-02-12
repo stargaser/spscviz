@@ -176,10 +176,24 @@ An example calling sequence inside an interactive session with defaults is:
 import spscinspector
 myobsid = 1342231851
 myarray = 'PSW'
-sources = spscinspector.sourcelist_pscdb(myobsid, myarray)
-img_data, mrkr_size, img_wcs = \
+sql_statement = """
+        select sourceid, obsid, arrayname, x, y,
+        ra, dec, flux, background, quality,
+        ratml, dectml, fluxtml, backgroundparm1tml,
+        ratm2, dectm2, fluxtm2, qualitydao
+        from source
+        where obsid={} and arrayname='{}'
+        order by sourceid asc
+"""
+dbname="spire"
+username="spire"
+hostname="psc.ipac.caltech.edu"
+port=5432
+img_data, filter, mrkr_size, img_wcs = \
      spscinspector.find_map(myobsid,myarray,'~/data/spsc/level2/20151007')
-titlestring = "SPSC: {} {}".format(myobsid, myarray)
+sources = spscinspector.sourcelist_pscdb(myobsid, filter, sql_statement,
+       dbname, username, hostname, port)
+titlestring = "SPSC: {} {}".format(myobsid, filter)
 display_sources(sources, img_data, mrkr_size, wcs, titlestring=titlestring)
 ```
 
@@ -213,31 +227,11 @@ For PACS, the source list must include:
 * `sourceid`
 * `susra`, `susdec`, `susflux`
 
-The default query in `spscinspector.sourcelist_pscdb` retrieves a number of other
-parameters. In an interactive session, you may wish to use a different query to
-the database, or to load the source list dataframe from some other data source.
-
-To change the query, use the lines from the `sourcelist_pscdb` function and change
-the SQL query as desired.
-```
-import psycopg2 as pg
-import pandas.io.sql as psql
-obsid = 1342231851
-array = 'PSW'
-with pg.connect("dbname=spire user=spire host=psc.ipac.caltech.edu") as connection:
-    sources = psql.read_sql("""
-        select sourceid, obsid, arrayname, x, y,
-        ra, dec, flux, background, quality,
-        ratml, dectml, fluxtml, backgroundparm1tml,
-        ratm2, dectm2, fluxtm2, qualitydao
-        from source
-        where obsid={} and arrayname='{}'
-        order by sourceid asc""".format(obsid, arrayname),
-        connection)
-```
+You can change the SQL statement either on the command line, or in an interactive
+session as shown above.
 
 ### Contributors
 
 David Shupe, IPAC (most of the code)
-Gábor Marton, Konkoly (modifications for PACS)
+Gábor Marton, Konkoly (modifications for PACS, and testing)
 Bernhard Schulz, IPAC (coding suggestions and testing)
