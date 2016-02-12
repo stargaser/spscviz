@@ -235,3 +235,9 @@ with pg.connect("dbname=spire user=spire host=psc.ipac.caltech.edu") as connecti
         order by sourceid asc""".format(obsid, arrayname),
         connection)
 ```
+
+### Contributors
+
+David Shupe, IPAC (most of the code)
+Gábor Marton, Konkoly (modifications for PACS)
+Bernhard Schulz, IPAC (coding suggestions and testing)
