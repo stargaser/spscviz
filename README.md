@@ -81,6 +81,11 @@ Here are the key mappings:
 
 * Left-arrow, down-arrow, or spacebar: go to the next source in the list.
 * Right-arrow or up-arrow: go backward one source.
+* T or t: move the high and low stretch values up
+* B or b: move the high and low stretch values down
+* W or w: widen the difference between high and low stretch values (decrease contrast)
+* N or n: narrow the difference between high and low stretch values (increase contrast)
+* U or u: in the terminal, user input of low and high stretch values
 * L or l: print in your terminal all the information for the current source that was 
 queried from the database.
 * M or m: Start movie mode (center on sources automatically)
